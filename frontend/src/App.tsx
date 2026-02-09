@@ -9,6 +9,7 @@ import CampaignDetailsPage from './pages/CampaignDetailsPage';
 import EditorDashboard from './pages/EditorDashboard';
 import CampaignsPage from './pages/CampaignsPage';
 import VerificationPage from './pages/VerificationPage';
+import ComingSoonPage from './pages/ComingSoonPage';
 import ChatbotDemo from './components/ChatbotDemo';
 import './index.css';
 
@@ -31,6 +32,11 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<><Navbar /><LandingPage /></>} />
         <Route path="/login" element={<LoginPage />} />
+
+        {/* Placeholder Routes */}
+        <Route path="/portal" element={<><Navbar /><ComingSoonPage title="Portal" /></>} />
+        <Route path="/network" element={<><Navbar /><ComingSoonPage title="Network" /></>} />
+        <Route path="/resources" element={<><Navbar /><ComingSoonPage title="Resources" /></>} />
 
         {/* Editor Routes */}
         <Route path="/editor/discover" element={<DiscoverPage />} />

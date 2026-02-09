@@ -8,13 +8,37 @@ import {
     Settings,
     LogOut,
     ChevronRight,
-    Globe
+    Globe,
+    User as UserIcon
 } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import nexusLogo from '../assets/nexus-logo.jpg';
+import { authApi } from '../services/api';
+import type { User } from '../services/api';
 
 const EditorSidebar = () => {
     const location = useLocation();
+    const navigate = useNavigate();
+    const [user, setUser] = useState<User | null>(null);
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const userData = await authApi.getMe();
+                setUser(userData);
+            } catch (err) {
+                console.error('Failed to fetch user:', err);
+                // navigate('/login');
+            }
+        };
+        fetchUser();
+    }, []);
+
+    const handleLogout = () => {
+        authApi.logout();
+        navigate('/login');
+    };
 
     const menuItems = [
         { icon: <Globe size={20} />, label: 'Discover', path: '/editor/discover' },
@@ -69,13 +93,18 @@ const EditorSidebar = () => {
 
             <div className="p-6 border-t border-orange-500/10 bg-zinc-900/10">
                 <div className="flex items-center gap-3 mb-6 p-2 rounded-lg bg-white/5 border border-white/5">
-                    <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-[10px] font-bold text-black border border-orange-600/30">JD</div>
+                    <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
+                        <UserIcon className="text-orange-500" size={16} />
+                    </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-white truncate">John Doe</p>
-                        <p className="text-[10px] text-orange-500/60 font-medium">Pro Editor</p>
+                        <p className="text-xs font-bold text-white truncate">{user?.username || 'Loading...'}</p>
+                        <p className="text-[10px] text-zinc-500 truncate">{user?.whop_email || 'Connecting...'}</p>
                     </div>
                 </div>
-                <button className="flex items-center gap-3 px-3 py-2 w-full text-zinc-500 hover:text-red-500 transition-all uppercase tracking-widest font-bold text-[10px] group">
+                <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 px-3 py-2 w-full text-zinc-500 hover:text-red-500 transition-all uppercase tracking-widest font-bold text-[10px] group"
+                >
                     <LogOut size={16} className="group-hover:-translate-x-1 transition-transform" />
                     Logout
                 </button>

@@ -23,7 +23,7 @@ const LandingPage = () => {
                             <span className="text-white">Orchestration.</span>
                         </h1>
                         <p className="text-xl text-zinc-400 max-w-3xl mx-auto mb-12 font-light leading-relaxed">
-                            Consolidate your digital assets, automate your workflows, and scale your media presence with NEXUS MEDIA's proprietary toolset.
+                            Consolidate your digital assets, automate your workflows, and scale your media presence with NEXUS's proprietary toolset.
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                             <button className="nexus-btn text-lg px-10 py-5 w-full sm:w-auto">

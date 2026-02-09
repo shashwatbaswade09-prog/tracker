@@ -41,11 +41,11 @@ const LoadingPage = ({ onComplete }: LoadingPageProps) => {
                         >
                             <img
                                 src={nexusLogo}
-                                alt="Nexus Media"
+                                alt="Nexus"
                                 className="w-32 h-32 rounded-2xl mb-8 logo-pulse"
                             />
                             <h1 className="text-4xl md:text-5xl font-bold tracking-[0.2em] orange-gradient uppercase">
-                                Nexus Media
+                                Nexus
                             </h1>
                         </motion.div>
                     )}

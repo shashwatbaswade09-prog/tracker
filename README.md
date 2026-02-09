@@ -1,6 +1,6 @@
-# Nexus Media Orchestration (V1.0) 🚀
+# Nexus Orchestration (V1.0) 🚀
 
-Welcome to the **Nexus Media** monorepo! This repository contains both the Frontend (React) and Backend (FastAPI) components of the platform.
+Welcome to the **Nexus** monorepo! This repository contains both the Frontend (React) and Backend (FastAPI) components of the platform.
 
 ## 📁 Project Structure
 

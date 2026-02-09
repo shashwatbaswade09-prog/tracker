@@ -10,13 +10,13 @@ const Navbar = () => {
                     <Link to="/" className="flex items-center gap-3 group">
                         <img src={nexusLogo} alt="Nexus" className="w-10 h-10 rounded-lg group-hover:scale-110 transition-transform" />
                         <div className="text-xl font-bold tracking-widest text-white uppercase hidden sm:block">
-                            NEXUS <span className="text-orange-500">MEDIA</span>
+                            NEXUS
                         </div>
                     </Link>
                     <div className="hidden lg:flex items-center gap-6 text-sm font-bold uppercase tracking-widest text-zinc-500">
-                        <a href="#" className="hover:text-orange-500 transition-colors">Portal</a>
-                        <a href="#" className="hover:text-orange-500 transition-colors">Network</a>
-                        <a href="#" className="hover:text-orange-500 transition-colors">Resources</a>
+                        <Link to="/portal" className="hover:text-orange-500 transition-colors">Portal</Link>
+                        <Link to="/network" className="hover:text-orange-500 transition-colors">Network</Link>
+                        <Link to="/resources" className="hover:text-orange-500 transition-colors">Resources</Link>
                     </div>
                 </div>
 

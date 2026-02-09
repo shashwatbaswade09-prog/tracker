@@ -15,7 +15,7 @@ class UserRole(str, Enum):
 class UserBase(BaseModel):
     email: EmailStr
     username: str
-    full_name: Optional[str] = None
+    whop_email: Optional[EmailStr] = None
 
 
 class UserCreate(UserBase):

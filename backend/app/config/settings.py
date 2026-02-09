@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     # CORS
     ALLOWED_ORIGINS: list = [
         "http://localhost:5173",
+        "http://127.0.0.1:5173",
         "http://localhost:3000",
         "https://nexus-frontend-2oc.pages.dev",
         "https://0eabcd01.nexus-frontend-2oc.pages.dev"

@@ -57,7 +57,7 @@ export interface LoginResponse {
 }
 
 export const authApi = {
-    register: async (data: { email: string; username: string; password: string; full_name?: string }) => {
+    register: async (data: { email: string; username: string; password: string; whop_email?: string }) => {
         return apiRequest<User>('/auth/register', {
             method: 'POST',
             body: JSON.stringify(data),

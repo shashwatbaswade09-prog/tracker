@@ -91,7 +91,7 @@ const CampaignDetailsPage = () => {
                                 <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-4">THINKSCHOOL <span className="text-blue-400">PODCAST</span></h2>
                                 <div className="flex items-center justify-center gap-3">
                                     <img src={nexusLogo} className="w-6 h-6 rounded border border-orange-500/20" />
-                                    <span className="text-xs font-black uppercase tracking-[0.4em] text-orange-500">NEXUS MEDIA</span>
+                                    <span className="text-xs font-black uppercase tracking-[0.4em] text-orange-500">NEXUS</span>
                                 </div>
                             </div>
                         </div>

@@ -39,7 +39,7 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
     db_user = User(
         email=user_data.email,
         username=user_data.username,
-        full_name=user_data.full_name,
+        whop_email=user_data.whop_email,
         hashed_password=get_password_hash(user_data.password),
         role="editor"
     )
@@ -62,7 +62,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
         )
     
     access_token = create_access_token(
-        data={"sub": user.id, "email": user.email},
+        data={"sub": str(user.id), "email": user.email},
         expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
     return {"access_token": access_token, "token_type": "bearer"}
@@ -79,7 +79,7 @@ async def login_json(user_data: UserLogin, db: Session = Depends(get_db)):
         )
     
     access_token = create_access_token(
-        data={"sub": user.id, "email": user.email},
+        data={"sub": str(user.id), "email": user.email},
         expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
     return {"access_token": access_token, "token_type": "bearer"}

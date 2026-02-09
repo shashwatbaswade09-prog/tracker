@@ -1,5 +1,8 @@
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
 import EditorSidebar from '../components/EditorSidebar';
+import { authApi } from '../services/api';
+import type { User } from '../services/api';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
@@ -93,6 +96,20 @@ const VerificationStatusCard = () => {
 };
 
 const EditorDashboard = () => {
+    const [user, setUser] = useState<User | null>(null);
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const userData = await authApi.getMe();
+                setUser(userData);
+            } catch (err) {
+                console.error('Failed to fetch user:', err);
+            }
+        };
+        fetchUser();
+    }, []);
+
     return (
         <div className="min-h-screen bg-[#020202] text-white flex">
             <EditorSidebar />
@@ -106,7 +123,7 @@ const EditorDashboard = () => {
                         animate={{ opacity: 1, x: 0 }}
                     >
                         <h1 className="text-4xl lg:text-5xl font-bold tracking-tighter uppercase mb-2">
-                            Welcome back, <span className="text-orange-500">John Doe</span>
+                            Welcome back, <span className="text-orange-500">{user?.username || 'Editor'}</span>
                         </h1>
                         <p className="text-zinc-500 text-lg flex items-center gap-2">
                             <Sparkles size={18} className="text-orange-500" />
