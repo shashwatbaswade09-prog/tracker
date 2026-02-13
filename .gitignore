@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+
+# Django
+db.sqlite3
+media/
+staticfiles/
+
+# Environment Variables
+.env
+
+# Celery
+celerybeat-schedule
+
+# IDEs
+.vscode/
+.idea/
+.DS_Store
+
+# Temporary Scripts
+test_*.py
+debug_*.py
