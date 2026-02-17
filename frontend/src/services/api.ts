@@ -1,21 +1,25 @@
 // API Configuration and Services
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-const API_V1 = `${API_BASE_URL}/api/v1`;
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+const API_V1 = API_BASE_URL ? `${API_BASE_URL}/api` : '/api';
 
 // Helper for making API requests
 async function apiRequest<T>(
     endpoint: string,
     options: RequestInit = {}
 ): Promise<T> {
-    const token = localStorage.getItem('nexus_token');
+    // Clear any malformed tokens that might have been set as strings like "undefined" or "null"
+    const rawToken = localStorage.getItem('nexus_token');
+    const token = (rawToken && rawToken !== 'undefined' && rawToken !== 'null') ? rawToken : null;
 
     const headers: HeadersInit = {
         'Content-Type': 'application/json',
         ...options.headers,
     };
 
-    if (token) {
+    // Don't send Authorization header for login/register as it can cause issues if the token is malformed
+    const isAuthEndpoint = endpoint.includes('/auth/login') || endpoint.includes('/auth/register');
+    if (token && !isAuthEndpoint) {
         (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
     }
 
@@ -25,6 +29,10 @@ async function apiRequest<T>(
     });
 
     if (!response.ok) {
+        if (response.status === 401) {
+            localStorage.removeItem('nexus_token');
+            // Optional: window.location.href = '/login';
+        }
         const error = await response.json().catch(() => ({ detail: 'Request failed' }));
         throw new Error(error.detail || 'Request failed');
     }
@@ -52,8 +60,10 @@ export interface User {
 }
 
 export interface LoginResponse {
-    access_token: string;
-    token_type: string;
+    access_token?: string; // Some providers
+    access?: string;       // SimpleJWT
+    refresh?: string;
+    token_type?: string;
 }
 
 export const authApi = {
@@ -64,12 +74,15 @@ export const authApi = {
         });
     },
 
-    login: async (email: string, password: string) => {
-        const response = await apiRequest<LoginResponse>('/auth/login/json', {
+    login: async (username: string, password: string) => {
+        const response = await apiRequest<LoginResponse>('/auth/login/', {
             method: 'POST',
-            body: JSON.stringify({ email, password }),
+            body: JSON.stringify({ username, password }),
         });
-        localStorage.setItem('nexus_token', response.access_token);
+        const token = response.access_token || response.access;
+        if (token) {
+            localStorage.setItem('nexus_token', token);
+        }
         return response;
     },
 
@@ -239,10 +252,105 @@ export const supportApi = {
     },
 };
 
+// --- Admin API ---
+
+export interface AdminStats {
+    total_views: number;
+    total_submissions: number;
+}
+
+export const adminApi = {
+    getStats: async () => {
+        return apiRequest<AdminStats>('/submissions/dashboard/admin/');
+    },
+
+    getUsers: async () => {
+        return apiRequest<User[]>('/auth/users/');
+    },
+
+    getAllSubmissions: async () => {
+        return apiRequest<Submission[]>('/submissions/');
+    },
+};
+
+// --- Integrations API ---
+
+export interface ConnectedAccount {
+    id: number;
+    platform: string;
+    handle: string;
+    profile_url: string;
+    status: string;
+    verification_code?: string;
+    verified_at?: string;
+    metrics?: {
+        views?: number;
+        subscribers?: number;
+        likes?: number;
+        comments?: number;
+        video_count?: number;
+        title?: string;
+        thumbnail?: string;
+    };
+}
+
+export interface VideoInsight {
+    id: string;
+    title: string;
+    thumbnail: string;
+    published_at: string;
+    views: number;
+    likes: number;
+    comments: number;
+    duration: string;
+    is_short: boolean;
+}
+
+export const integrationsApi = {
+    getConnectUrl: async (platform: string) => {
+        const endpoint = platform === 'YOUTUBE' ? '/integrations/connected-accounts/connect_youtube/' : `/integrations/connected-accounts/connect_${platform.toLowerCase()}/`;
+        return apiRequest<{ url: string }>(endpoint);
+    },
+
+    oauthExchange: async (platform: string, code: string) => {
+        return apiRequest<ConnectedAccount>('/integrations/connected-accounts/oauth_exchange/', {
+            method: 'POST',
+            body: JSON.stringify({ platform, code }),
+        });
+    },
+
+    manualLink: async (platform: string, handle: string) => {
+        return apiRequest<ConnectedAccount>('/integrations/connected-accounts/manual_link/', {
+            method: 'POST',
+            body: JSON.stringify({ platform, handle }),
+        });
+    },
+
+    getAccounts: async () => {
+        return apiRequest<ConnectedAccount[]>('/integrations/connected-accounts/');
+    },
+
+    getAccountMetrics: async (id: number) => {
+        return apiRequest<ConnectedAccount['metrics']>(`/integrations/connected-accounts/${id}/metrics/`);
+    },
+
+    getContentMetrics: async (id: number) => {
+        return apiRequest<VideoInsight[]>(`/integrations/connected-accounts/${id}/content_metrics/`);
+    },
+
+    unlinkAccount: async (id: number) => {
+        return apiRequest<void>(`/integrations/connected-accounts/${id}/`, {
+            method: 'DELETE',
+        });
+    },
+};
+
 export default {
     auth: authApi,
     campaigns: campaignsApi,
     chat: chatApi,
     health: healthApi,
     support: supportApi,
+    admin: adminApi,
+    integrations: integrationsApi,
 };

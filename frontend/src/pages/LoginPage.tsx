@@ -13,7 +13,7 @@ const LoginPage = () => {
     const [success, setSuccess] = useState<string | null>(null);
 
     // Form States
-    const [email, setEmail] = useState('');
+    const [loginIdentifier, setLoginIdentifier] = useState('');
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
     const [whopEmail, setWhopEmail] = useState('');
@@ -26,7 +26,7 @@ const LoginPage = () => {
         setIsLoading(true);
 
         try {
-            await authApi.login(email, password);
+            await authApi.login(loginIdentifier, password);
             console.log('Login successful for role:', role);
             if (role === 'editor') {
                 navigate('/editor/discover');
@@ -47,7 +47,7 @@ const LoginPage = () => {
 
         try {
             await authApi.register({
-                email,
+                email: loginIdentifier,
                 username,
                 password,
                 whop_email: whopEmail
@@ -225,13 +225,13 @@ const LoginPage = () => {
                                         </div>
                                     )}
                                     <div className="relative">
-                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" size={18} />
+                                        <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" size={18} />
                                         <input
                                             required
-                                            type="email"
-                                            placeholder="Email Address"
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
+                                            type="text"
+                                            placeholder="Email or Username"
+                                            value={loginIdentifier}
+                                            onChange={(e) => setLoginIdentifier(e.target.value)}
                                             className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-orange-500/50 transition-all text-white"
                                         />
                                     </div>

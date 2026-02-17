@@ -1,16 +1,18 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import EditorSidebar from '../components/EditorSidebar';
-import { authApi } from '../services/api';
-import type { User } from '../services/api';
+import { authApi, integrationsApi } from '../services/api';
+import type { User, ConnectedAccount, VideoInsight } from '../services/api';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import {
     TrendingUp, Eye, DollarSign, Plus,
-    Trophy, Zap, Target, Star, CheckCircle2,
+    Trophy, Zap, Target, CheckCircle2,
     Clock, Instagram, Youtube, Twitter, Globe,
-    Award, Flame, Sparkles, PlusSquare, ShieldCheck
+    Award, Flame, Sparkles, PlusSquare,
+    RefreshCw,
+    ShieldCheck, Loader2
 } from 'lucide-react';
 
 // Mock data for analytics
@@ -36,12 +38,6 @@ const activeCampaigns = [
     { id: 3, title: 'Crypto Alpha Signals', rate: '$15.00 / Lead', type: 'Twitter/X', deadline: '5d 06h', icon: <Twitter className="text-blue-400" /> },
 ];
 
-const clipPerformance = [
-    { id: 1, title: 'SickTransition_v1.mp4', platform: 'TikTok', views: '245k', earnings: '$122.50', status: 'Approved', date: 'Feb 05' },
-    { id: 2, title: 'AlphaIntro_Final.mp4', platform: 'Instagram', views: '1.2M', earnings: '$840.00', status: 'Approved', date: 'Feb 04', highlight: true },
-    { id: 3, title: 'WeeklyRecap_Damp.mp4', platform: 'YouTube', views: '18k', earnings: '--', status: 'Pending', date: 'Feb 07' },
-];
-
 const StatCard = ({ icon, label, value, trend, trendType }: any) => (
     <motion.div
         whileHover={{ y: -5 }}
@@ -64,9 +60,19 @@ const StatCard = ({ icon, label, value, trend, trendType }: any) => (
     </motion.div>
 );
 
-const VerificationStatusCard = () => {
-    const verified = JSON.parse(localStorage.getItem('nexus_verified_platforms') || '[]');
+const VerificationStatusCard = ({ accounts = [] }: { accounts: any }) => {
     const email = localStorage.getItem('nexus_whop_email');
+
+    // Handle paginated response structure if present
+    const accountsList = Array.isArray(accounts)
+        ? accounts
+        : (accounts?.results && Array.isArray(accounts.results))
+            ? accounts.results
+            : [];
+
+    const verifiedPlatforms = accountsList
+        .filter((a: any) => a && a.platform)
+        .map((a: any) => a.platform.toLowerCase());
 
     return (
         <motion.div
@@ -86,9 +92,9 @@ const VerificationStatusCard = () => {
                 <p className="text-zinc-500 text-[10px] uppercase tracking-[0.2em] font-bold mb-1">Status</p>
                 <div className="flex gap-1.5 mt-1">
                     {['instagram', 'tiktok', 'youtube', 'twitter'].map(p => (
-                        <div key={p} className={`w-2 h-2 rounded-full ${verified.includes(p) ? 'bg-green-500' : 'bg-white/10'}`} title={p} />
+                        <div key={p} className={`w-2 h-2 rounded-full ${verifiedPlatforms.includes(p) ? 'bg-green-500' : 'bg-white/10'}`} title={p} />
                     ))}
-                    <span className="text-[10px] font-bold text-white ml-2 uppercase">{verified.length}/4 VERIFIED</span>
+                    <span className="text-[10px] font-bold text-white ml-2 uppercase">{(verifiedPlatforms || []).length}/4 VERIFIED</span>
                 </div>
             </div>
         </motion.div>
@@ -97,24 +103,114 @@ const VerificationStatusCard = () => {
 
 const EditorDashboard = () => {
     const [user, setUser] = useState<User | null>(null);
+    const [accounts, setAccounts] = useState<ConnectedAccount[]>([]);
+    const [metrics, setMetrics] = useState<{ [key: number]: any }>({});
+    const [videoInsights, setVideoInsights] = useState<VideoInsight[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [selectedPlatform, setSelectedPlatform] = useState<'YOUTUBE' | 'INSTAGRAM'>('YOUTUBE');
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     useEffect(() => {
-        const fetchUser = async () => {
+        const fetchData = async () => {
             try {
-                const userData = await authApi.getMe();
+                const [userData, accountsData] = await Promise.all([
+                    authApi.getMe(),
+                    integrationsApi.getAccounts(),
+                ]);
                 setUser(userData);
+
+                // Handle paginated response structure if present
+                const accountsList = Array.isArray(accountsData)
+                    ? accountsData
+                    : (accountsData as any)?.results || [];
+                setAccounts(accountsList);
+
+                // Fetch metrics for verified YouTube accounts
+                const youtubeAccounts = accountsList.filter((a: ConnectedAccount) => a.platform === 'YOUTUBE' && a.status === 'VERIFIED');
+                const metricsPromises = youtubeAccounts.map(async (acc: ConnectedAccount) => {
+                    try {
+                        const m = await integrationsApi.getAccountMetrics(acc.id);
+                        return { id: acc.id, metrics: m };
+                    } catch (e) {
+                        console.error(`Failed to fetch metrics for account ${acc.id}:`, e);
+                        return null;
+                    }
+                });
+
+                const metricsResults = await Promise.all(metricsPromises);
+                const metricsMap: { [key: number]: any } = {};
+                metricsResults.forEach(res => {
+                    if (res) metricsMap[res.id] = res.metrics;
+                });
+                setMetrics(metricsMap);
+
             } catch (err) {
-                console.error('Failed to fetch user:', err);
+                console.error('Failed to fetch dashboard data:', err);
+            } finally {
+                setIsLoading(false);
             }
         };
-        fetchUser();
+        fetchData();
     }, []);
+
+    useEffect(() => {
+        const fetchContent = async () => {
+            const activeAcc = accounts.find(a => a.platform === selectedPlatform && a.status === 'VERIFIED');
+            if (activeAcc) {
+                try {
+                    const insights = await integrationsApi.getContentMetrics(activeAcc.id);
+                    setVideoInsights(insights);
+                } catch (e) {
+                    console.error("Failed to fetch content metrics:", e);
+                    setVideoInsights([]);
+                }
+            } else {
+                setVideoInsights([]);
+            }
+        };
+        if (accounts.length > 0) {
+            fetchContent();
+        }
+    }, [selectedPlatform, accounts]);
+
+    const handleRefresh = async () => {
+        setIsRefreshing(true);
+        const platformAccounts = accounts.filter(a => a.platform === selectedPlatform && a.status === 'VERIFIED');
+        const promises = platformAccounts.map(async (acc: ConnectedAccount) => {
+            try {
+                const [m, insights] = await Promise.all([
+                    integrationsApi.getAccountMetrics(acc.id),
+                    integrationsApi.getContentMetrics(acc.id)
+                ]);
+                setMetrics(prev => ({ ...prev, [acc.id]: m }));
+                if (acc.platform === selectedPlatform) setVideoInsights(insights);
+            } catch (e) {
+                console.error(e);
+            }
+        });
+        await Promise.all(promises);
+        setTimeout(() => setIsRefreshing(false), 800); // UI feel
+    };
+
+    // Filtered account for live monitor
+    const activeAccount = accounts.find(a => a.platform === selectedPlatform && a.status === 'VERIFIED');
+    const activeMetrics = activeAccount ? metrics[activeAccount.id] : null;
+
+
+    // Aggregate metrics for summary cards
+    const totalSubscribers = Object.values(metrics).reduce((acc, m) => acc + (Number(m?.subscribers) || 0), 0);
+    const totalChannelViews = Object.values(metrics).reduce((acc, m) => acc + (Number(m?.views) || 0), 0);
 
     return (
         <div className="min-h-screen bg-[#020202] text-white flex">
             <EditorSidebar />
 
-            <main className="flex-1 ml-64 p-8 lg:p-12 overflow-y-auto">
+            <main className="flex-1 ml-64 p-8 lg:p-12 overflow-y-auto relative">
+                {isLoading && (
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+                        <Loader2 className="text-orange-500 animate-spin" size={48} />
+                    </div>
+                )}
 
                 {/* 1. Welcome Header */}
                 <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
@@ -146,9 +242,9 @@ const EditorDashboard = () => {
                     <StatCard icon={<DollarSign size={24} />} label="Total Payout" value="$12,840" trend="+12.5%" trendType="up" />
                     <StatCard icon={<Target size={24} />} label="This Month" value="$2,450" trend="+8.2%" trendType="up" />
                     <StatCard icon={<CheckCircle2 size={24} />} label="Approved Clips" value="142" trend="+14" trendType="up" />
-                    <StatCard icon={<Eye size={24} />} label="Total Views" value="4.8M" trend="+15%" trendType="up" />
-                    <StatCard icon={<Trophy size={24} />} label="Campaign Rank" value="#42" trend="+5" trendType="up" />
-                    <VerificationStatusCard />
+                    <StatCard icon={<Eye size={24} />} label="Channel Views" value={totalChannelViews > 1000000 ? `${(totalChannelViews / 1000000).toFixed(1)}M` : totalChannelViews.toLocaleString()} trend="+15%" trendType="up" />
+                    <StatCard icon={<Trophy size={24} />} label="Subscribers" value={totalSubscribers > 1000 ? `${(totalSubscribers / 1000).toFixed(1)}K` : totalSubscribers.toLocaleString()} trend="+5" trendType="up" />
+                    <VerificationStatusCard accounts={accounts} />
                 </div>
 
                 <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 mb-12">
@@ -300,73 +396,159 @@ const EditorDashboard = () => {
 
                 {/* 7. My Clips Performance Table */}
                 <div className="glass-panel p-8">
-                    <div className="flex items-center justify-between mb-10">
-                        <h3 className="text-lg font-bold uppercase tracking-widest">My Clips Portal</h3>
-                        <div className="flex gap-4">
-                            <div className="flex items-center gap-2 px-3 py-1.5 glass-card bg-white/5 text-[10px] font-bold uppercase cursor-pointer hover:border-orange-500/30">
-                                <Instagram size={14} /> Instagram
-                            </div>
-                            <div className="flex items-center gap-2 px-3 py-1.5 glass-card bg-white/5 text-[10px] font-bold uppercase cursor-pointer hover:border-orange-500/30">
-                                <Youtube size={14} /> YouTube
+                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+                        <div>
+                            <h3 className="text-lg font-bold uppercase tracking-widest mb-1">My Clips Portal</h3>
+                            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Manage and track your asset performance</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={handleRefresh}
+                                className={`p-2 rounded-lg glass-card border-white/5 hover:border-orange-500/30 transition-all ${isRefreshing ? 'animate-spin text-orange-500' : 'text-zinc-500 hover:text-white'}`}
+                            >
+                                <RefreshCw size={14} />
+                            </button>
+                            <div className="flex gap-2 p-1 glass-card bg-white/5 rounded-xl border-white/5">
+                                <button
+                                    onClick={() => setSelectedPlatform('INSTAGRAM')}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${selectedPlatform === 'INSTAGRAM' ? 'bg-orange-500 text-black shadow-[0_0_15px_rgba(255,107,0,0.3)]' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                >
+                                    <Instagram size={14} /> Instagram
+                                </button>
+                                <button
+                                    onClick={() => setSelectedPlatform('YOUTUBE')}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${selectedPlatform === 'YOUTUBE' ? 'bg-orange-500 text-black shadow-[0_0_15px_rgba(255,107,0,0.3)]' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                >
+                                    <Youtube size={14} /> YouTube
+                                </button>
                             </div>
                         </div>
                     </div>
 
+                    {/* Live Account Monitor Banner */}
+                    <div className="mb-10 animate-fade-in">
+                        {activeAccount ? (
+                            <div className="glass-card p-6 border-orange-500/10 flex flex-wrap items-center justify-between gap-6 bg-gradient-to-r from-orange-500/[0.03] to-transparent">
+                                <div className="flex items-center gap-5">
+                                    <div className="relative">
+                                        <div className="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
+                                            {selectedPlatform === 'YOUTUBE' ? <Youtube size={24} /> : <Instagram size={24} />}
+                                        </div>
+                                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-[#050505] animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div>
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-0.5">
+                                            <span className="font-bold text-sm tracking-tight">{activeMetrics?.title || activeAccount.handle}</span>
+                                            <span className="px-1.5 py-0.5 rounded bg-green-500/10 text-green-500 text-[8px] font-black uppercase tracking-tighter border border-green-500/20">Live</span>
+                                        </div>
+                                        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{activeMetrics?.video_count || 0} Assets • Linked & Tracking</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-10">
+                                    <div className="flex flex-col">
+                                        <span className="text-[9px] font-black uppercase text-zinc-500 tracking-tighter mb-1">Followers</span>
+                                        <span className="font-bold text-lg leading-none tracking-tighter">
+                                            {activeMetrics?.subscribers?.toLocaleString() || '0'}
+                                        </span>
+                                    </div>
+                                    <div className="w-px h-8 bg-white/5"></div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[9px] font-black uppercase text-zinc-500 tracking-tighter mb-1">Total Views</span>
+                                        <span className="font-bold text-lg leading-none tracking-tighter">
+                                            {activeMetrics?.views?.toLocaleString() || '0'}
+                                        </span>
+                                    </div>
+                                    <div className="w-px h-8 bg-white/5"></div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[9px] font-black uppercase text-zinc-500 tracking-tighter mb-1">Engagement</span>
+                                        <span className="font-bold text-lg leading-none tracking-tighter text-orange-500">
+                                            {activeMetrics ? (
+                                                (() => {
+                                                    const views = activeMetrics.views || 0;
+                                                    const interactions = (activeMetrics.likes || 0) + (activeMetrics.comments || 0);
+                                                    if (views === 0) return '0%';
+                                                    return ((interactions / views) * 100).toFixed(1) + '%';
+                                                })()
+                                            ) : '--'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="glass-card p-6 border-white/5 text-center bg-white/[0.02]">
+                                <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">No verified {selectedPlatform} account linked for live tracking</p>
+                                <button className="mt-3 text-[10px] font-black text-orange-500 uppercase tracking-[0.2em] hover:text-orange-400">Connect Account Now →</button>
+                            </div>
+                        )}
+                    </div>
+
                     <div className="overflow-x-auto">
+                        <div className="flex items-center justify-between mb-6">
+                            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-orange-500/80">Recent Content Insights</h4>
+                            <span className="text-[10px] font-bold text-zinc-500 uppercase">{videoInsights.length} Assets Tracked</span>
+                        </div>
                         <table className="w-full text-left">
                             <thead>
                                 <tr className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 border-b border-white/5">
-                                    <th className="pb-6 pl-2">Asset Details</th>
-                                    <th className="pb-6">Platform</th>
-                                    <th className="pb-6">Reach</th>
-                                    <th className="pb-6 text-center">Earnings</th>
+                                    <th className="pb-6 pl-2">Content Asset</th>
+                                    <th className="pb-6">Type</th>
+                                    <th className="pb-6">Engagement</th>
+                                    <th className="pb-6 text-center">Likes</th>
                                     <th className="pb-6">Status</th>
-                                    <th className="pb-6 pr-2 text-right">Date</th>
+                                    <th className="pb-6 pr-2 text-right">Published</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
-                                {clipPerformance.map((row) => (
+                                {videoInsights.map((video) => (
                                     <tr
-                                        key={row.id}
-                                        className={`group transition-all ${row.highlight ? 'bg-orange-500/5' : 'hover:bg-white/5'}`}
+                                        key={video.id}
+                                        className="group hover:bg-white/5 transition-all"
                                     >
                                         <td className="py-6 pl-2">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-16 h-10 rounded bg-zinc-800 relative overflow-hidden group-hover:scale-105 transition-transform border border-white/5 group-hover:border-orange-500/20">
-                                                    <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-transparent"></div>
-                                                    {row.highlight && <div className="absolute top-1 left-1"><Star size={10} className="text-orange-500 fill-orange-500" /></div>}
+                                                    <img src={video.thumbnail} alt="" className="w-full h-full object-cover opacity-60 group-hover:opacity-90 transition-opacity" />
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                                                 </div>
-                                                <div className="flex flex-col">
-                                                    <span className="font-bold text-xs uppercase tracking-tight text-zinc-200 group-hover:text-white">{row.title}</span>
-                                                    <span className="text-[10px] text-zinc-600 font-medium">MP4 • 1080p • 24MB</span>
+                                                <div className="flex flex-col max-w-[200px]">
+                                                    <span className="font-bold text-xs uppercase tracking-tight text-zinc-200 group-hover:text-white truncate" title={video.title}>{video.title}</span>
+                                                    <span className="text-[9px] text-zinc-600 font-medium uppercase font-mono">{video.id}</span>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="py-6">
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 group-hover:text-zinc-300">{row.platform}</span>
+                                            <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${video.is_short ? 'bg-orange-500/10 text-orange-500' : 'bg-blue-500/10 text-blue-500'}`}>
+                                                {video.is_short ? 'Short' : 'Video'}
+                                            </span>
                                         </td>
                                         <td className="py-6">
                                             <div className="flex flex-col">
-                                                <span className="text-xs font-bold group-hover:text-white transition-colors">{row.views}</span>
-                                                <span className="text-[9px] text-green-500 font-bold">+2.4%</span>
+                                                <span className="text-xs font-bold group-hover:text-white transition-colors">{video.views.toLocaleString()} Views</span>
+                                                <span className="text-[9px] text-green-500 font-bold">Live Tracking</span>
                                             </div>
                                         </td>
                                         <td className="py-6 text-center">
-                                            <span className={`text-sm font-bold tracking-tighter ${row.highlight ? 'text-orange-400' : 'text-white'}`}>{row.earnings}</span>
+                                            <span className="text-sm font-bold tracking-tighter text-white">{video.likes.toLocaleString()}</span>
                                         </td>
                                         <td className="py-6">
                                             <div className="flex items-center gap-2">
-                                                <div className={`w-1.5 h-1.5 rounded-full ${row.status === 'Approved' ? 'bg-green-500' : 'bg-orange-500/50 rotate-in-progress'}`}></div>
-                                                <span className={`text-[10px] font-bold uppercase tracking-widest ${row.status === 'Approved' ? 'text-green-500/80' : 'text-zinc-500'}`}>
-                                                    {row.status}
-                                                </span>
+                                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                                                <span className="text-[10px] font-bold uppercase tracking-widest text-green-500/80">Active</span>
                                             </div>
                                         </td>
                                         <td className="py-6 pr-2 text-right">
-                                            <span className="text-[10px] font-bold text-zinc-600">{row.date}</span>
+                                            <span className="text-[10px] font-bold text-zinc-600">{new Date(video.published_at).toLocaleDateString()}</span>
                                         </td>
                                     </tr>
                                 ))}
+                                {videoInsights.length === 0 && !isLoading && (
+                                    <tr>
+                                        <td colSpan={6} className="py-12 text-center text-zinc-600 text-xs uppercase font-bold tracking-widest">
+                                            No recent content found for this platform
+                                        </td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     </div>

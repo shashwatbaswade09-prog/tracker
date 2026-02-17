@@ -2,6 +2,9 @@ import os
 from pathlib import Path
 from datetime import timedelta
 import sys
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -188,6 +191,10 @@ CELERY_BEAT_SCHEDULE = {
     "refresh-active-submissions": {
         "task": "apps.submissions.tasks.refresh_all_active_submissions",
         "schedule": 14400.0,  # 4 hours in seconds
+    },
+    "sync-verified-accounts": {
+        "task": "apps.integrations.tasks.sync_all_verified_accounts",
+        "schedule": 3600.0,  # 1 hour in seconds
     },
 }
 

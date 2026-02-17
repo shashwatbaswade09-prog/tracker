@@ -32,6 +32,10 @@ class ConnectedAccount(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    # Caching metrics for automated sync
+    latest_metrics = models.JSONField(default=dict, blank=True)
+    last_synced_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         unique_together = ("user", "platform", "handle")

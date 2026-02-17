@@ -10,6 +10,8 @@ import EditorDashboard from './pages/EditorDashboard';
 import CampaignsPage from './pages/CampaignsPage';
 import VerificationPage from './pages/VerificationPage';
 import ComingSoonPage from './pages/ComingSoonPage';
+import AdminDashboard from './pages/AdminDashboard';
+import IntegrationCallbackPage from './pages/IntegrationCallbackPage';
 import ChatbotDemo from './components/ChatbotDemo';
 import './index.css';
 
@@ -48,7 +50,10 @@ function AppContent() {
         {/* Fallbacks */}
         <Route path="/editor/*" element={<DiscoverPage />} />
 
-        <Route path="/admin/dashboard" element={<div className="p-20 text-center text-white">Admin Dashboard Placeholder</div>} />
+        <Route path="/integrations/callback" element={<IntegrationCallbackPage />} />
+
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/*" element={<AdminDashboard />} />
       </Routes>
       <ChatbotDemo />
     </div>

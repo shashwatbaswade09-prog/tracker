@@ -1,0 +1,5 @@
+Watching for file changes with StatReloader
+/Users/shashwat/Desktop/nexus media versions/nexus 15th feb/nexus_latest/venv/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Method Not Allowed: /api/auth/login/
+[16/Feb/2026 18:03:57] "HEAD /api/auth/login/ HTTP/1.1" 405 0

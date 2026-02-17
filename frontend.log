@@ -1,0 +1,38 @@
+
+> whop-clone@0.0.0 dev
+> vite --port 5173
+
+
+  VITE v7.3.1  ready in 167 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+11:52:40 PM [vite] (client) hmr update /src/index.css, /src/pages/IntegrationCallbackPage.tsx, /src/pages/LoginPage.tsx, /src/pages/AdminDashboard.tsx, /src/components/ChatbotDemo.tsx, /src/pages/VerificationPage.tsx, /src/pages/EditorDashboard.tsx, /src/components/EditorSidebar.tsx, /src/components/AdminSidebar.tsx
+12:03:29 AM [vite] (client) hmr update /src/index.css, /src/pages/IntegrationCallbackPage.tsx, /src/pages/LoginPage.tsx, /src/pages/AdminDashboard.tsx, /src/components/ChatbotDemo.tsx, /src/pages/VerificationPage.tsx, /src/pages/EditorDashboard.tsx, /src/components/EditorSidebar.tsx, /src/components/AdminSidebar.tsx
+12:05:27 AM [vite] (client) hmr update /src/pages/EditorDashboard.tsx, /src/index.css
+12:05:46 AM [vite] vite.config.ts changed, restarting server...
+12:05:46 AM [vite] server restarted.
+12:06:01 AM [vite] (client) hmr update /src/index.css, /src/pages/LoginPage.tsx, /src/pages/VerificationPage.tsx, /src/pages/IntegrationCallbackPage.tsx, /src/pages/AdminDashboard.tsx, /src/pages/EditorDashboard.tsx, /src/components/ChatbotDemo.tsx, /src/components/EditorSidebar.tsx, /src/components/AdminSidebar.tsx
+12:09:01 AM [vite] (client) hmr update /src/index.css, /src/pages/EditorDashboard.tsx
+12:10:50 AM [vite] (client) hmr update /src/index.css, /src/pages/VerificationPage.tsx
+12:15:54 AM [vite] (client) hmr update /src/index.css, /src/pages/LoginPage.tsx, /src/pages/VerificationPage.tsx, /src/pages/IntegrationCallbackPage.tsx, /src/pages/AdminDashboard.tsx, /src/pages/EditorDashboard.tsx, /src/components/ChatbotDemo.tsx, /src/components/EditorSidebar.tsx, /src/components/AdminSidebar.tsx
+12:16:10 AM [vite] (client) hmr update /src/index.css, /src/pages/EditorDashboard.tsx
+12:16:20 AM [vite] (client) hmr update /src/index.css, /src/pages/EditorDashboard.tsx
+12:16:41 AM [vite] (client) hmr update /src/index.css, /src/pages/EditorDashboard.tsx
+12:16:53 AM [vite] (client) hmr update /src/index.css, /src/pages/VerificationPage.tsx
+12:16:54 AM [vite] (client) hmr update /src/index.css, /src/pages/VerificationPage.tsx
+12:19:12 AM [vite] (client) hmr update /src/index.css, /src/pages/EditorDashboard.tsx
+12:29:23 AM [vite] (client) hmr update /src/index.css, /src/pages/EditorDashboard.tsx
+12:29:53 AM [vite] (client) hmr update /src/index.css, /src/pages/EditorDashboard.tsx
+12:38:29 AM [vite] (client) hmr update /src/index.css, /src/pages/LoginPage.tsx, /src/pages/VerificationPage.tsx, /src/pages/IntegrationCallbackPage.tsx, /src/pages/AdminDashboard.tsx, /src/pages/EditorDashboard.tsx, /src/components/ChatbotDemo.tsx, /src/components/EditorSidebar.tsx, /src/components/AdminSidebar.tsx
+12:39:22 AM [vite] (client) hmr update /src/index.css, /src/pages/EditorDashboard.tsx
+12:39:42 AM [vite] (client) hmr update /src/index.css, /src/pages/EditorDashboard.tsx
+12:39:52 AM [vite] (client) hmr update /src/index.css, /src/pages/EditorDashboard.tsx
+12:40:20 AM [vite] (client) hmr update /src/index.css, /src/pages/EditorDashboard.tsx
+12:50:58 AM [vite] (client) hmr update /src/index.css, /src/pages/LoginPage.tsx, /src/pages/VerificationPage.tsx, /src/pages/IntegrationCallbackPage.tsx, /src/pages/AdminDashboard.tsx, /src/pages/EditorDashboard.tsx, /src/components/ChatbotDemo.tsx, /src/components/EditorSidebar.tsx, /src/components/AdminSidebar.tsx
+12:51:31 AM [vite] (client) hmr update /src/index.css, /src/pages/VerificationPage.tsx
+1:16:37 AM [vite] (client) hmr update /src/index.css, /src/pages/EditorDashboard.tsx
+3:31:12 AM [vite] (client) hmr update /src/index.css, /src/pages/AdminDashboard.tsx
+3:45:45 AM [vite] (client) hmr update /src/index.css, /src/pages/AdminDashboard.tsx
+4:03:11 AM [vite] (client) hmr update /src/index.css, /src/pages/AdminDashboard.tsx
+4:03:28 AM [vite] (client) hmr update /src/index.css, /src/pages/EditorDashboard.tsx

@@ -12,6 +12,79 @@ class IsOwnerOrAdmin(permissions.BasePermission):
 class ConnectedAccountViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
     
+    @action(detail=True, methods=["get"])
+    def metrics(self, request, pk=None):
+        """Fetches latest metrics for this connected account (cached or fresh)"""
+        account = self.get_object()
+        
+        # Check if data is stale (older than 1 hour)
+        stale = not account.last_synced_at or (timezone.now() - account.last_synced_at).total_seconds() > 3600
+        
+        if stale or not account.latest_metrics:
+            from apps.integrations.tasks import sync_account_metrics
+            sync_account_metrics.delay(account.id)
+            
+            # If no cached data, fetch synchronously once to avoid empty UI
+            if not account.latest_metrics:
+                from apps.submissions.analytics_providers import get_provider
+                provider = get_provider(account.platform)
+                metrics = provider.fetch_analytics(account.handle, access_token=account.access_token)
+                account.latest_metrics = metrics
+                account.last_synced_at = timezone.now()
+                account.save()
+        
+        return Response(account.latest_metrics)
+
+    @action(detail=False, methods=["post"])
+    def manual_link(self, request):
+        """Allows linking an account via handle without OAuth"""
+        platform = request.data.get("platform")
+        handle = request.data.get("handle")
+        
+        if not platform or not handle:
+            return Response({"detail": "Platform and handle required"}, status=400)
+            
+        # Clean handle
+        handle = handle.strip()
+        if platform == "YOUTUBE" and not handle.startswith('@'):
+            handle = f"@{handle}"
+            
+        # Create or Update
+        account, created = ConnectedAccount.objects.update_or_create(
+            user=request.user,
+            platform=platform,
+            handle=handle,
+            defaults={
+                "status": ConnectedAccount.Status.VERIFIED, # Auto-verify for manual demo link
+                "profile_url": f"https://youtube.com/{handle}" if platform == "YOUTUBE" else f"https://instagram.com/{handle.strip('@')}",
+                "verification_note": "Linked Manually (Live Tracking Status: ACTIVE)"
+            }
+        )
+        return Response(ConnectedAccountSerializer(account).data)
+
+    @action(detail=True, methods=["get"])
+    def content_metrics(self, request, pk=None):
+        """Fetches detailed analytics for recent content (Shorts/Videos)"""
+        account = self.get_object()
+        
+        # Check if we have cached content metrics (stored in nested JSON or separate task)
+        # For now, we fetch live but we'll introduce a background refresh trigger
+        from apps.submissions.analytics_providers import get_provider
+        provider = get_provider(account.platform)
+        
+        if not provider or not hasattr(provider, 'fetch_content_analytics'):
+            return Response({"detail": "Content analytics not supported for this platform"}, status=400)
+            
+        access_token = account.access_token
+        # Allow the specific handles even without OAuth for demo
+        is_demo_handle = account.handle in ["@SchoolbyGanesh", "@TharunSpeaks"]
+        
+        if not access_token and not is_demo_handle:
+            return Response({"detail": "Account must be linked via OAuth for content analytics"}, status=401)
+            
+        content_metrics = provider.fetch_content_analytics(access_token=access_token, handle=account.handle)
+        return Response(content_metrics)
+    
     def get_queryset(self):
         user = self.request.user
         if user.is_admin:
@@ -183,7 +256,39 @@ class ConnectedAccountViewSet(viewsets.ModelViewSet):
         )
         return Response({"url": url})
 
-    @action(detail=False, methods=["post"], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated])
+    def connect_youtube(self, request):
+        """Generates the Google OAuth URL for YouTube Analytics"""
+        import os
+        from django.conf import settings
+        
+        client_id = os.getenv("GOOGLE_CLIENT_ID")
+        if not client_id:
+            return Response({"detail": "Google Client ID not configured"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Build redirect URI based on frontend URL
+        origin = settings.CORS_ALLOWED_ORIGINS[0] if isinstance(settings.CORS_ALLOWED_ORIGINS, (list, tuple)) else str(settings.CORS_ALLOWED_ORIGINS).split(',')[0]
+        redirect_uri = f"{origin}/integrations/callback"
+        
+        state = "youtube_connection"
+        
+        # YouTube Read-only scopes for metrics
+        scopes = [
+            "https://www.googleapis.com/auth/youtube.readonly",
+            "https://www.googleapis.com/auth/userinfo.profile",
+        ]
+        
+        url = (
+            "https://accounts.google.com/o/oauth2/v2/auth"
+            f"?client_id={client_id}"
+            f"&redirect_uri={redirect_uri}"
+            "&response_type=code"
+            f"&scope={' '.join(scopes)}"
+            f"&state={state}"
+            "&access_type=offline"
+            "&prompt=consent"
+        )
+        return Response({"url": url})
     def oauth_exchange(self, request):
         """
         Exchanges the 'code' from frontend for an access token.
@@ -199,7 +304,8 @@ class ConnectedAccountViewSet(viewsets.ModelViewSet):
         import requests
         from django.conf import settings
         
-        frontend_redirect_uri = f"{settings.CORS_ALLOWED_ORIGINS.split(',')[0]}/integrations/callback"
+        origin = settings.CORS_ALLOWED_ORIGINS[0] if isinstance(settings.CORS_ALLOWED_ORIGINS, (list, tuple)) else str(settings.CORS_ALLOWED_ORIGINS).split(',')[0]
+        frontend_redirect_uri = f"{origin}/integrations/callback"
 
         if platform == "TIKTOK":
             client_key = os.getenv("TIKTOK_CLIENT_KEY")
@@ -287,6 +393,70 @@ class ConnectedAccountViewSet(viewsets.ModelViewSet):
                         "status": ConnectedAccount.Status.VERIFIED,
                         "handle": "Instagram Connected", # We could fetch real handle later
                         "profile_url": "https://instagram.com/"
+                    }
+                )
+                return Response(ConnectedAccountSerializer(account).data)
+
+            except Exception as e:
+                return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        elif platform == "YOUTUBE":
+            client_id = os.getenv("GOOGLE_CLIENT_ID")
+            client_secret = os.getenv("GOOGLE_CLIENT_SECRET")
+            
+            token_url = "https://oauth2.googleapis.com/token"
+            data = {
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "code": code,
+                "grant_type": "authorization_code",
+                "redirect_uri": frontend_redirect_uri
+            }
+            
+            try:
+                resp = requests.post(token_url, data=data)
+                resp_json = resp.json()
+                
+                if "access_token" not in resp_json:
+                    return Response({"detail": f"YouTube Auth Failed: {resp_json}"}, status=status.HTTP_400_BAD_REQUEST)
+                    
+                access_token = resp_json["access_token"]
+                refresh_token = resp_json.get("refresh_token")
+                expires_in = resp_json.get("expires_in", 3600)
+                
+                # Fetch Channel Info
+                from googleapiclient.discovery import build
+                from google.oauth2.credentials import Credentials
+                
+                creds = Credentials(access_token)
+                youtube = build('youtube', 'v3', credentials=creds)
+                
+                channels_resp = youtube.channels().list(
+                    part="snippet,statistics",
+                    mine=True
+                ).execute()
+                
+                if not channels_resp.get('items'):
+                    return Response({"detail": "No YouTube channel found for this account"}, status=status.HTTP_400_BAD_REQUEST)
+                
+                channel = channels_resp['items'][0]
+                channel_id = channel['id']
+                snippet = channel['snippet']
+                
+                handle = snippet.get('customUrl', f"channel_{channel_id}")
+                profile_url = f"https://youtube.com/{handle}" if handle.startswith('@') else f"https://youtube.com/channel/{channel_id}"
+                
+                account, created = ConnectedAccount.objects.update_or_create(
+                    user=request.user,
+                    platform=ConnectedAccount.Platform.YOUTUBE,
+                    defaults={
+                        "access_token": access_token,
+                        "refresh_token": refresh_token,
+                        "status": ConnectedAccount.Status.VERIFIED,
+                        "token_expires_at": timezone.now() + timezone.timedelta(seconds=expires_in),
+                        "handle": handle,
+                        "profile_url": profile_url,
+                        "verification_note": f"Linked via OAuth (Channel: {snippet['title']})"
                     }
                 )
                 return Response(ConnectedAccountSerializer(account).data)

@@ -80,11 +80,19 @@ class AdminDashboardView(APIView):
     permission_classes = [permissions.IsAdminUser]
 
     def get(self, request):
-        total_views = AnalyticsSnapshot.objects.aggregate(Sum("views"))["views__sum"] or 0
+        from apps.integrations.models import ConnectedAccount
+        
+        total_views = 0
+        accounts = ConnectedAccount.objects.filter(status=ConnectedAccount.Status.VERIFIED)
+        for account in accounts:
+            # Use cached metrics if available
+            metrics = account.latest_metrics or {}
+            total_views += metrics.get("views", 0)
+
         total_submissions = Submission.objects.count()
         
         return Response({
             "total_views": total_views,
             "total_submissions": total_submissions,
-            # Add more aggregate stats here
+            # Aggregated system metrics
         })

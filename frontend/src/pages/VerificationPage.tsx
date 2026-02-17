@@ -1,44 +1,100 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import EditorSidebar from '../components/EditorSidebar';
+import { integrationsApi, type ConnectedAccount } from '../services/api';
 import {
     Instagram, Youtube, Plus, X,
-    CheckCircle2, ExternalLink, Mail, ShieldCheck
+    CheckCircle2, ExternalLink, Mail, ShieldCheck,
+    Loader2
 } from 'lucide-react';
 
 const VerificationPage = () => {
-    const [verifiedPlatforms, setVerifiedPlatforms] = useState<string[]>([]);
+    const [accounts, setAccounts] = useState<ConnectedAccount[]>([]);
+    const [metrics, setMetrics] = useState<{ [key: number]: any }>({});
     const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
     const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
+    const [manualHandle, setManualHandle] = useState("");
     const [whopEmail, setWhopEmail] = useState("");
     const [isSaving, setIsSaving] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isLinking, setIsLinking] = useState(false);
 
     // Initial load
     useEffect(() => {
-        const saved = localStorage.getItem('nexus_verified_platforms');
-        if (saved) setVerifiedPlatforms(JSON.parse(saved));
+        const fetchData = async () => {
+            try {
+                const accountsData = await integrationsApi.getAccounts();
+                // Handle paginated response structure if present
+                const accountsList = Array.isArray(accountsData)
+                    ? accountsData
+                    : (accountsData as any)?.results || [];
+                setAccounts(accountsList);
 
-        const savedEmail = localStorage.getItem('nexus_whop_email');
-        if (savedEmail) setWhopEmail(savedEmail);
+                // Fetch metrics for verified accounts
+                const verifiedAccounts = accountsList.filter((a: ConnectedAccount) => a.status === 'VERIFIED');
+                const metricsPromises = verifiedAccounts.map(async (acc: ConnectedAccount) => {
+                    try {
+                        const m = await integrationsApi.getAccountMetrics(acc.id);
+                        return { id: acc.id, metrics: m };
+                    } catch (e) {
+                        console.error(`Failed to fetch metrics for account ${acc.id}:`, e);
+                        return null;
+                    }
+                });
+
+                const metricsResults = await Promise.all(metricsPromises);
+                const metricsMap: { [key: number]: any } = {};
+                metricsResults.forEach(res => {
+                    if (res) metricsMap[res.id] = res.metrics;
+                });
+                setMetrics(metricsMap);
+
+                const savedEmail = localStorage.getItem('nexus_whop_email');
+                if (savedEmail) setWhopEmail(savedEmail);
+            } catch (err) {
+                console.error('Failed to fetch verification data:', err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchData();
     }, []);
 
-    const savePlatforms = (newPlatforms: string[]) => {
-        setVerifiedPlatforms(newPlatforms);
-        localStorage.setItem('nexus_verified_platforms', JSON.stringify(newPlatforms));
-    };
+    const handleConnect = async () => {
+        if (!selectedPlatform) return;
 
-    const handleConnect = () => {
-        if (selectedPlatform && !verifiedPlatforms.includes(selectedPlatform)) {
-            const newPlatforms = [...verifiedPlatforms, selectedPlatform];
-            savePlatforms(newPlatforms);
+        setIsLinking(true);
+        try {
+            // Check if OAuth is configured (simple heuristic)
+            // If it fails or we want to allow manual linking as a preference:
+            if (manualHandle) {
+                const newAcc = await integrationsApi.manualLink(selectedPlatform.toUpperCase(), manualHandle);
+                setAccounts(prev => [...prev.filter(a => a.id !== newAcc.id), newAcc]);
+                setIsVerifyModalOpen(false);
+                setSelectedPlatform(null);
+                setManualHandle("");
+            } else {
+                const { url } = await integrationsApi.getConnectUrl(selectedPlatform.toUpperCase());
+                window.location.href = url;
+            }
+        } catch (err) {
+            console.error('Failed to link account:', err);
+            alert('Failed to link account. Please try manual linking if OAuth is unavailable.');
+        } finally {
+            setIsLinking(false);
         }
-        setIsVerifyModalOpen(false);
-        setSelectedPlatform(null);
     };
 
-    const handleUnlink = (platform: string) => {
-        const newPlatforms = verifiedPlatforms.filter(p => p !== platform);
-        savePlatforms(newPlatforms);
+    const handleUnlink = async (accountId: number) => {
+        if (!confirm('Are you sure you want to unlink this account?')) return;
+
+        try {
+            await integrationsApi.unlinkAccount(accountId);
+            setAccounts(accounts.filter(acc => acc.id !== accountId));
+        } catch (err) {
+            console.error('Failed to unlink account:', err);
+            alert('Failed to unlink account.');
+        }
     };
 
     const handleSaveEmail = () => {
@@ -78,36 +134,57 @@ const VerificationPage = () => {
                     </div>
 
                     {/* 2. Linked Accounts Grid (Matching Screenshot) */}
-                    <div className="glass-panel p-8 space-y-8 border-white/5">
+                    <div className="glass-panel p-8 space-y-8 border-white/5 relative">
+                        {isLoading && (
+                            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-10 flex items-center justify-center rounded-3xl">
+                                <Loader2 size={32} className="text-orange-500 animate-spin" />
+                            </div>
+                        )}
                         <div className="flex items-center gap-2 text-zinc-400">
                             <Instagram size={18} />
-                            <span className="text-xs font-bold uppercase tracking-widest">Instagram</span>
-                            <span className="text-[10px] text-zinc-600 font-medium">1 account</span>
+                            <span className="text-xs font-bold uppercase tracking-widest">Network Connections</span>
+                            <span className="text-[10px] text-zinc-600 font-medium">{accounts.length} accounts</span>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {verifiedPlatforms.map(platformId => {
-                                const p = platforms.find(pl => pl.id === platformId);
-                                if (!p) return null;
+                            {(Array.isArray(accounts) ? accounts : (accounts as any)?.results || []).map((account: any) => {
+                                const p = platforms.find(pl => pl.id === account?.platform?.toLowerCase());
                                 return (
                                     <motion.div
-                                        key={platformId}
+                                        key={account.id}
                                         initial={{ opacity: 0, scale: 0.9 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         className="p-5 rounded-2xl bg-zinc-900/50 border border-white/5 relative group"
                                     >
                                         <div className="flex items-center justify-between mb-4">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs font-bold text-white uppercase tracking-tight">@nexus_editor_{platformId}</span>
-                                                <ExternalLink size={12} className="text-zinc-600" />
+                                            <div className="flex items-center gap-2 overflow-hidden">
+                                                <div className={p?.color}>{p?.icon || <ShieldCheck size={16} />}</div>
+                                                <span className="text-xs font-bold text-white uppercase tracking-tight truncate">@{account.handle}</span>
+                                                <a href={account.profile_url} target="_blank" rel="noreferrer">
+                                                    <ExternalLink size={12} className="text-zinc-600 hover:text-white transition-colors" />
+                                                </a>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-2 text-[10px] font-bold text-green-500 uppercase tracking-widest mb-6">
-                                            <CheckCircle2 size={12} /> Verified 28/01/2026
+                                        <div className="flex items-center gap-2 text-[10px] font-bold text-green-500 uppercase tracking-widest mb-2">
+                                            <CheckCircle2 size={12} /> {account.status === 'VERIFIED' ? 'Verified' : 'Pending'} {account.verified_at ? new Date(account.verified_at).toLocaleDateString() : ''}
                                         </div>
+
+                                        {metrics[account.id] && (
+                                            <div className="flex gap-4 mb-4 pt-4 border-t border-white/5">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[9px] text-zinc-500 font-bold uppercase">Subscribers</span>
+                                                    <span className="text-xs font-bold text-white">{(metrics[account.id].subscribers || 0).toLocaleString()}</span>
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-[9px] text-zinc-500 font-bold uppercase">Total Views</span>
+                                                    <span className="text-xs font-bold text-white">{(metrics[account.id].views || 0).toLocaleString()}</span>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         <button
-                                            onClick={() => handleUnlink(platformId)}
-                                            className="w-full py-2 bg-red-500/10 text-red-500/60 hover:text-red-500 hover:bg-red-500/20 border border-red-500/10 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all"
+                                            onClick={() => handleUnlink(account.id)}
+                                            className="w-full py-2 bg-red-500/10 text-red-500/60 hover:text-red-500 hover:bg-red-500/20 border border-red-500/10 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all mt-2"
                                         >
                                             Unlink
                                         </button>
@@ -115,7 +192,7 @@ const VerificationPage = () => {
                                 );
                             })}
 
-                            {verifiedPlatforms.length === 0 && (
+                            {!isLoading && accounts.length === 0 && (
                                 <div className="col-span-full py-12 text-center border-2 border-dashed border-white/5 rounded-3xl">
                                     <ShieldCheck size={48} className="mx-auto text-zinc-800 mb-4" />
                                     <p className="text-xs font-bold text-zinc-600 uppercase tracking-widest">No accounts connected yet</p>
@@ -182,7 +259,7 @@ const VerificationPage = () => {
                                     <X size={24} />
                                 </button>
 
-                                <h3 className="text-3xl font-bold text-center mb-10 tracking-tight">Verify Platform</h3>
+                                <h3 className="text-3xl font-bold text-center mb-10 tracking-tight">Connect Account</h3>
 
                                 <div className="grid grid-cols-2 gap-4 mb-10">
                                     {platforms.map(p => (
@@ -202,12 +279,31 @@ const VerificationPage = () => {
                                     ))}
                                 </div>
 
+                                {selectedPlatform && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        className="mb-10 space-y-4"
+                                    >
+                                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest text-center">
+                                            Enter handle (e.g. @SchoolbyGanesh)
+                                        </p>
+                                        <input
+                                            type="text"
+                                            placeholder={`@${selectedPlatform}_handle`}
+                                            value={manualHandle}
+                                            onChange={(e) => setManualHandle(e.target.value)}
+                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-5 px-8 text-xl font-bold focus:border-orange-500 outline-none transition-all text-center"
+                                        />
+                                    </motion.div>
+                                )}
+
                                 <button
-                                    disabled={!selectedPlatform}
+                                    disabled={!selectedPlatform || (selectedPlatform && !manualHandle) || isLinking}
                                     onClick={handleConnect}
                                     className="w-full py-5 bg-white/10 text-zinc-400 font-bold text-xl rounded-2xl hover:bg-white/20 hover:text-white transition-all disabled:opacity-10"
                                 >
-                                    Continue
+                                    {isLinking ? "Linking..." : "Connect Now"}
                                 </button>
                             </motion.div>
                         </div>
