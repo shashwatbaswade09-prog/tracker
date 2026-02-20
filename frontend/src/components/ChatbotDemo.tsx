@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, Bot, User, Mail, CheckCircle } from 'lucide-react';
+import { MessageCircle, X, Send, Bot, User, Mail } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { chatApi, supportApi } from '../services/api';
 import type { ChatMessage as ApiChatMessage } from '../services/api';
@@ -51,7 +51,7 @@ export default function ChatbotDemo() {
     const [supportName, setSupportName] = useState('');
     const [supportMessage, setSupportMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [ticketCreated, setTicketCreated] = useState<number | null>(null);
+    const [, setTicketCreated] = useState<number | null>(null);
 
     // Scroll to bottom when messages change
     useEffect(() => {
