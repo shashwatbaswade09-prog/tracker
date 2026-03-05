@@ -78,7 +78,7 @@ const LandingPage = () => {
                                 transition={{ delay: 0.5 }}
                                 className="flex flex-col items-center"
                             >
-                                <span className="text-5xl md:text-6xl font-black tabular-nums tracking-tight">500,000,000+</span>
+                                <span className="text-5xl md:text-6xl font-black tabular-nums tracking-tight">210,000,000+</span>
                                 <span className="text-zinc-600 font-bold tracking-[0.2em] uppercase text-xs mt-2">Views tracked for your favorite creators</span>
                             </motion.div>
                         </div>
@@ -192,12 +192,12 @@ const LandingPage = () => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <VideoCard videoSrc="/assets/results/1.mp4" delay={0.1} />
-                        <VideoCard videoSrc="/assets/results/2.mp4" delay={0.2} />
-                        <VideoCard videoSrc="/assets/results/4.mp4" delay={0.3} />
-                        <VideoCard videoSrc="/assets/results/5.mp4" delay={0.4} />
-                        <VideoCard videoSrc="/assets/results/6.mp4" delay={0.5} />
-                        <VideoCard videoSrc="/assets/results/7.mp4" delay={0.6} />
+                        <VideoCard videoSrc={`${import.meta.env.BASE_URL}assets/results/1.mp4`} delay={0.1} />
+                        <VideoCard videoSrc={`${import.meta.env.BASE_URL}assets/results/2.mp4`} delay={0.2} />
+                        <VideoCard videoSrc={`${import.meta.env.BASE_URL}assets/results/4.mp4`} delay={0.3} />
+                        <VideoCard videoSrc={`${import.meta.env.BASE_URL}assets/results/5.mp4`} delay={0.4} />
+                        <VideoCard videoSrc={`${import.meta.env.BASE_URL}assets/results/6.mp4`} delay={0.5} />
+                        <VideoCard videoSrc={`${import.meta.env.BASE_URL}assets/results/7.mp4`} delay={0.6} />
                     </div>
                 </section>
 
