@@ -26,17 +26,19 @@ const VideoCard = ({ videoSrc, delay }: { videoSrc: string, delay: number }) => 
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
-                    // If it's a touch device, use intersection observer to play/pause
-                    if (!window.matchMedia('(hover: hover)').matches) {
-                        if (entry.isIntersecting) {
-                            videoRef.current?.play().catch(e => console.log('Autoplay prevented on mobile:', e));
-                        } else {
-                            videoRef.current?.pause();
+                    // Force play on intersecting for mobile devices (ignore hover check for observer)
+                    if (entry.isIntersecting) {
+                        // Ensure video is muted for mobile autoplay policies before playing
+                        if (videoRef.current) {
+                            videoRef.current.muted = true;
+                            videoRef.current.play().catch(e => console.log('Autoplay prevented by browser:', e));
                         }
+                    } else {
+                        videoRef.current?.pause();
                     }
                 });
             },
-            { threshold: 0.5 } // Play when at least 50% visible
+            { threshold: 0.3 } // Play when at least 30% visible (better for fast scrolling)
         );
 
         if (containerRef.current) {
