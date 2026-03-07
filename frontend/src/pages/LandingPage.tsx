@@ -145,7 +145,7 @@ const LandingPage = () => {
                                 className="flex flex-col items-center"
                             >
                                 <span className="text-5xl md:text-6xl font-black tabular-nums tracking-tight">600,000+</span>
-                                <span className="text-zinc-600 font-bold tracking-[0.2em] uppercase text-xs mt-2 text-center">Subscribers gained for one of our clients</span>
+                                <span className="text-zinc-600 font-bold tracking-[0.2em] uppercase text-xs mt-2 text-center">Resulting subscriber growth</span>
                             </motion.div>
                         </div>
 
