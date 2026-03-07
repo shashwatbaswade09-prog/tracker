@@ -21,6 +21,14 @@ const VideoCard = ({ videoSrc, delay }: { videoSrc: string, delay: number }) => 
         }
     };
 
+    // Safari/iOS strict mute enforcement on mount
+    useEffect(() => {
+        if (videoRef.current) {
+            videoRef.current.defaultMuted = true;
+            videoRef.current.muted = true;
+        }
+    }, []);
+
     // Mobile scroll handle (Intersection Observer)
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -31,7 +39,10 @@ const VideoCard = ({ videoSrc, delay }: { videoSrc: string, delay: number }) => 
                         // Ensure video is muted for mobile autoplay policies before playing
                         if (videoRef.current) {
                             videoRef.current.muted = true;
-                            videoRef.current.play().catch(e => console.log('Autoplay prevented by browser:', e));
+                            // Small delay to ensure mute is registered by browser before play
+                            setTimeout(() => {
+                                videoRef.current?.play().catch(e => console.log('Autoplay prevented by browser:', e));
+                            }, 50);
                         }
                     } else {
                         videoRef.current?.pause();
@@ -73,8 +84,9 @@ const VideoCard = ({ videoSrc, delay }: { videoSrc: string, delay: number }) => 
                 loop
                 muted
                 playsInline
-                preload="metadata"
+                autoPlay
                 className="w-full h-full object-cover opacity-85 hover:opacity-100 hover:scale-105 md:group-hover:opacity-100 md:group-hover:scale-105 transition-all duration-700 pointer-events-none"
+                style={{ pointerEvents: 'none' }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
 
