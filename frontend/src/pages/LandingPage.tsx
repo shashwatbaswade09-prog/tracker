@@ -135,7 +135,7 @@ const LandingPage = () => {
                                 className="flex flex-col items-center"
                             >
                                 <span className="text-5xl md:text-6xl font-black tabular-nums tracking-tight">210,000,000+</span>
-                                <span className="text-zinc-600 font-bold tracking-[0.2em] uppercase text-xs mt-2 text-center">Views tracked for your creators</span>
+                                <span className="text-zinc-600 font-bold tracking-[0.2em] uppercase text-xs mt-2 text-center">Views generated for a single client</span>
                             </motion.div>
 
                             <motion.div
@@ -145,7 +145,7 @@ const LandingPage = () => {
                                 className="flex flex-col items-center"
                             >
                                 <span className="text-5xl md:text-6xl font-black tabular-nums tracking-tight">600,000+</span>
-                                <span className="text-zinc-600 font-bold tracking-[0.2em] uppercase text-xs mt-2 text-center">Subscribers Gained</span>
+                                <span className="text-zinc-600 font-bold tracking-[0.2em] uppercase text-xs mt-2 text-center">Subscribers gained for a single client</span>
                             </motion.div>
                         </div>
 
