@@ -1,6 +1,5 @@
 
 import { Link } from 'react-router-dom';
-import nexusLogo from '../assets/nexus-logo.jpg';
 
 const Navbar = () => {
     return (
@@ -8,7 +7,7 @@ const Navbar = () => {
             <div className="max-w-7xl mx-auto flex items-center justify-between glass-panel px-6 py-3 border-orange-500/10">
                 <div className="flex items-center gap-6">
                     <Link to="/" className="flex items-center gap-3 group">
-                        <img src={nexusLogo} alt="Nexus" className="w-10 h-10 rounded-lg group-hover:scale-110 transition-transform" />
+                        <img src={`${import.meta.env.BASE_URL}nexus-logo.jpg`} alt="Nexus" className="w-10 h-10 rounded-lg group-hover:scale-110 transition-transform" />
                         <div className="text-xl font-bold tracking-widest text-white uppercase hidden sm:block">
                             NEXUS
                         </div>
