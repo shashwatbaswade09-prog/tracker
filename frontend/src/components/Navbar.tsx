@@ -15,8 +15,6 @@ const Navbar = () => {
                     </Link>
                     <div className="hidden lg:flex items-center gap-6 text-sm font-bold uppercase tracking-widest text-zinc-500">
                         <Link to="/portal" className="hover:text-orange-500 transition-colors">Portal</Link>
-                        <Link to="/network" className="hover:text-orange-500 transition-colors">Network</Link>
-                        <Link to="/resources" className="hover:text-orange-500 transition-colors">Resources</Link>
                     </div>
                 </div>
 

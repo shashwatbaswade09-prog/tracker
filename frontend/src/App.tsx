@@ -38,8 +38,6 @@ function AppContent() {
 
         {/* Placeholder Routes */}
         <Route path="/portal" element={<><Navbar /><ComingSoonPage title="Portal" /></>} />
-        <Route path="/network" element={<><Navbar /><ComingSoonPage title="Network" /></>} />
-        <Route path="/resources" element={<><Navbar /><ComingSoonPage title="Resources" /></>} />
 
         {/* Editor Routes */}
         <Route path="/editor/discover" element={<DiscoverPage />} />
