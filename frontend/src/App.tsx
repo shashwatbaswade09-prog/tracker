@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import Navbar from './components/Navbar';
 import LandingPage from './pages/LandingPage';
@@ -12,12 +12,13 @@ import VerificationPage from './pages/VerificationPage';
 import ComingSoonPage from './pages/ComingSoonPage';
 import AdminDashboard from './pages/AdminDashboard';
 import IntegrationCallbackPage from './pages/IntegrationCallbackPage';
-import ChatbotDemo from './components/ChatbotDemo';
+
 import './index.css';
 
 function AppContent() {
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(() => {
-    return window.location.pathname === '/' && !sessionStorage.getItem('nexus_loaded');
+    return location.pathname === '/' && !sessionStorage.getItem('nexus_loaded');
   });
 
   const handleLoadingComplete = () => {
@@ -55,7 +56,7 @@ function AppContent() {
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/admin/*" element={<AdminDashboard />} />
       </Routes>
-      <ChatbotDemo />
+
     </div>
   );
 }

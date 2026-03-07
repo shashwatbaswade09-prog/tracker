@@ -83,14 +83,6 @@ const LandingPage = () => {
                             </motion.div>
                         </div>
 
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                            <button className="nexus-btn text-lg px-12 py-5 w-full sm:w-auto rounded-xl">
-                                Join the Network
-                            </button>
-                            <button className="nexus-btn-outline text-lg px-12 py-5 w-full sm:w-auto rounded-xl bg-white/5 backdrop-blur-md">
-                                View Solutions
-                            </button>
-                        </div>
                     </motion.div>
 
                     {/* Category Scroller (ROI Media Style) */}
