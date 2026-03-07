@@ -1,28 +1,69 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Users, TrendingUp, ShieldCheck, Mail, Phone, Instagram } from 'lucide-react';
 
 const VideoCard = ({ videoSrc, delay }: { videoSrc: string, delay: number }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
 
+    // Desktop hover handles
     const handleMouseEnter = () => {
-        videoRef.current?.play();
+        // Only trigger hover play if we have a mouse (not on touch devices)
+        if (window.matchMedia('(hover: hover)').matches) {
+            videoRef.current?.play().catch(e => console.log('Autoplay prevented:', e));
+        }
     };
 
     const handleMouseLeave = () => {
-        videoRef.current?.pause();
-        if (videoRef.current) videoRef.current.currentTime = 0;
+        if (window.matchMedia('(hover: hover)').matches) {
+            videoRef.current?.pause();
+            if (videoRef.current) videoRef.current.currentTime = 0;
+        }
     };
+
+    // Mobile scroll handle (Intersection Observer)
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    // If it's a touch device, use intersection observer to play/pause
+                    if (!window.matchMedia('(hover: hover)').matches) {
+                        if (entry.isIntersecting) {
+                            videoRef.current?.play().catch(e => console.log('Autoplay prevented on mobile:', e));
+                        } else {
+                            videoRef.current?.pause();
+                        }
+                    }
+                });
+            },
+            { threshold: 0.5 } // Play when at least 50% visible
+        );
+
+        if (containerRef.current) {
+            observer.observe(containerRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, []);
 
     return (
         <motion.div
+            ref={containerRef}
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ delay }}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
-            className="group relative aspect-[9/16] rounded-3xl overflow-hidden border border-white/5 hover:border-orange-500/30 transition-all shadow-2xl shadow-orange-500/0 hover:shadow-orange-500/10 bg-zinc-900"
+            className="group relative aspect-[9/16] rounded-3xl overflow-hidden border border-white/5 hover:border-orange-500/30 transition-all shadow-2xl shadow-orange-500/0 hover:shadow-orange-500/10 bg-zinc-900 cursor-pointer"
+            onClick={() => {
+                // Toggle play/pause on tap for mobile just in case
+                if (videoRef.current?.paused) {
+                    videoRef.current.play().catch(e => console.log('Play failed:', e));
+                } else {
+                    videoRef.current?.pause();
+                }
+            }}
         >
             <video
                 ref={videoRef}
@@ -30,11 +71,12 @@ const VideoCard = ({ videoSrc, delay }: { videoSrc: string, delay: number }) => 
                 loop
                 muted
                 playsInline
-                className="w-full h-full object-cover opacity-85 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
+                preload="metadata"
+                className="w-full h-full object-cover opacity-85 hover:opacity-100 hover:scale-105 md:group-hover:opacity-100 md:group-hover:scale-105 transition-all duration-700 pointer-events-none"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
 
-            <div className="absolute inset-0 flex flex-col justify-end p-8" />
+            <div className="absolute inset-0 flex flex-col justify-end p-8 pointer-events-none" />
         </motion.div>
     );
 };
