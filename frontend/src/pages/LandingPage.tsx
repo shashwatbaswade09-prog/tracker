@@ -149,6 +149,17 @@ const LandingPage = () => {
                             </motion.div>
                         </div>
 
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.9 }}
+                            className="inline-block px-6 py-3 md:px-8 md:py-4 bg-white/5 border border-white/10 rounded-full backdrop-blur-md"
+                        >
+                            <span className="text-zinc-300 font-bold tracking-[0.15em] uppercase text-xs md:text-sm">
+                                Working with 15+ of the world's largest creators and founders
+                            </span>
+                        </motion.div>
+
                     </motion.div>
 
                     {/* Category Scroller (ROI Media Style) */}
