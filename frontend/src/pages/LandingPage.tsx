@@ -86,8 +86,8 @@ const LandingPage = () => {
         <div className="min-h-screen bg-[#000000] text-white pt-32 pb-20 px-6 relative overflow-hidden">
             {/* ROI Media Inspired Radial Glows */}
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden -z-10">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-orange-600/10 blur-[120px] rounded-full" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-900/10 blur-[120px] rounded-full" />
+                <div className="hidden md:block absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-orange-600/10 blur-[120px] rounded-full" />
+                <div className="hidden md:block absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-900/10 blur-[120px] rounded-full" />
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,107,0,0.03)_0%,transparent_70%)]" />
             </div>
 
@@ -132,7 +132,7 @@ const LandingPage = () => {
                         <motion.div
                             animate={{ x: [0, -1000] }}
                             transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                            className="flex gap-20 whitespace-nowrap"
+                            className="flex gap-20 whitespace-nowrap will-change-transform"
                         >
                             {["Streamers", "Coaches", "Creators", "Musicians", "Athletes", "Brands", "Influencers", "Gamers"].map((cat) => (
                                 <span key={cat} className="text-4xl md:text-5xl font-bold text-zinc-800 uppercase tracking-widest hover:text-orange-500/20 transition-colors cursor-default">

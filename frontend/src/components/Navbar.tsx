@@ -1,4 +1,4 @@
-import { Menu } from 'lucide-react';
+
 import { Link } from 'react-router-dom';
 import nexusLogo from '../assets/nexus-logo.jpg';
 
@@ -13,17 +13,12 @@ const Navbar = () => {
                             NEXUS
                         </div>
                     </Link>
-                    <div className="hidden lg:flex items-center gap-6 text-sm font-bold uppercase tracking-widest text-zinc-500">
-                        <Link to="/portal" className="hover:text-orange-500 transition-colors">Portal</Link>
+                    <div className="flex items-center gap-6 text-sm font-bold uppercase tracking-widest text-zinc-500">
+                        <Link to="/portal" className="text-zinc-400 hover:text-orange-500 transition-colors">Portal</Link>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-4">
-
-
-                    <button className="lg:hidden p-2 text-zinc-400 hover:text-orange-500">
-                        <Menu size={24} />
-                    </button>
                 </div>
             </div>
         </nav>
