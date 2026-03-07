@@ -126,8 +126,8 @@ const LandingPage = () => {
                             We build you a mass content distribution system that scales your brand to new heights with an army of clippers.
                         </p>
 
-                        {/* Social Proof Metric */}
-                        <div className="flex flex-col items-center justify-center mb-16">
+                        {/* Social Proof Metrics */}
+                        <div className="flex flex-col md:flex-row items-center justify-center gap-12 md:gap-20 mb-16">
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
@@ -135,7 +135,17 @@ const LandingPage = () => {
                                 className="flex flex-col items-center"
                             >
                                 <span className="text-5xl md:text-6xl font-black tabular-nums tracking-tight">210,000,000+</span>
-                                <span className="text-zinc-600 font-bold tracking-[0.2em] uppercase text-xs mt-2">Views tracked for your favorite creators</span>
+                                <span className="text-zinc-600 font-bold tracking-[0.2em] uppercase text-xs mt-2 text-center">Views tracked for your creators</span>
+                            </motion.div>
+
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: 0.7 }}
+                                className="flex flex-col items-center"
+                            >
+                                <span className="text-5xl md:text-6xl font-black tabular-nums tracking-tight lg:text-orange-500">600,000+</span>
+                                <span className="text-zinc-600 font-bold tracking-[0.2em] uppercase text-xs mt-2 text-center">Subscribers Gained</span>
                             </motion.div>
                         </div>
 
