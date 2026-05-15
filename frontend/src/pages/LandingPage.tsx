@@ -289,7 +289,7 @@ const LandingPage = () => {
                                 href: "mailto:nexus@thenexusmedia.org"
                             },
                             {
-                                label: "Phone",
+                                label: "Team",
                                 value: "+91 7002884915",
                                 icon: <Phone className="text-orange-500" />,
                                 href: "tel:+917002884915"
