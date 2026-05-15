@@ -287,9 +287,9 @@ const LandingPage = () => {
                             },
                             {
                                 label: "Phone",
-                                value: "+91 9834613309",
+                                value: "+91 7002884915",
                                 icon: <Phone className="text-orange-500" />,
-                                href: "tel:+919834613309"
+                                href: "tel:+917002884915"
                             },
                             {
                                 label: "Instagram",
