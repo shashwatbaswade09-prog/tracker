@@ -134,7 +134,10 @@ const LandingPage = () => {
                                 transition={{ delay: 0.5 }}
                                 className="flex flex-col items-center"
                             >
-                                <span className="text-5xl md:text-6xl font-black tabular-nums tracking-tight">280,000,000+</span>
+                                <div className="flex flex-col items-center">
+                                    <span className="text-5xl md:text-6xl font-black tabular-nums tracking-tight">750,000,000+</span>
+                                    <span className="text-orange-500/80 font-bold text-[10px] tracking-widest uppercase mt-1">(In the past 5 months)</span>
+                                </div>
                                 <span className="text-zinc-600 font-bold tracking-[0.2em] uppercase text-xs mt-2 text-center">Views generated for one of our clients</span>
                             </motion.div>
 
@@ -144,7 +147,7 @@ const LandingPage = () => {
                                 transition={{ delay: 0.7 }}
                                 className="flex flex-col items-center"
                             >
-                                <span className="text-5xl md:text-6xl font-black tabular-nums tracking-tight">625,000+</span>
+                                <span className="text-5xl md:text-6xl font-black tabular-nums tracking-tight">900,000+</span>
                                 <span className="text-zinc-600 font-bold tracking-[0.2em] uppercase text-xs mt-2 text-center">Resulting subscriber growth</span>
                             </motion.div>
                         </div>
