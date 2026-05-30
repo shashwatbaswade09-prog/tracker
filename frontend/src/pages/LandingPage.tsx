@@ -284,9 +284,9 @@ const LandingPage = () => {
                         {[
                             {
                                 label: "Email",
-                                value: "nexus@thenexusmedia.org",
+                                value: "nexus@nexusemails.org",
                                 icon: <Mail className="text-orange-500" />,
-                                href: "mailto:nexus@thenexusmedia.org"
+                                href: "mailto:nexus@nexusemails.org"
                             },
                             {
                                 label: "Team",
