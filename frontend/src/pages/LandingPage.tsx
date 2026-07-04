@@ -1,82 +1,28 @@
-import { useRef, useEffect } from 'react';
+import { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Users, TrendingUp, ShieldCheck, Mail, Phone, Instagram } from 'lucide-react';
 
 const VideoCard = ({ videoSrc, delay }: { videoSrc: string, delay: number }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
 
-    // Desktop hover handles
     const handleMouseEnter = () => {
-        // Only trigger hover play if we have a mouse (not on touch devices)
-        if (window.matchMedia('(hover: hover)').matches) {
-            videoRef.current?.play().catch(e => console.log('Autoplay prevented:', e));
-        }
+        videoRef.current?.play();
     };
 
     const handleMouseLeave = () => {
-        if (window.matchMedia('(hover: hover)').matches) {
-            videoRef.current?.pause();
-            if (videoRef.current) videoRef.current.currentTime = 0;
-        }
+        videoRef.current?.pause();
+        if (videoRef.current) videoRef.current.currentTime = 0;
     };
-
-    // Safari/iOS strict mute enforcement on mount
-    useEffect(() => {
-        if (videoRef.current) {
-            videoRef.current.defaultMuted = true;
-            videoRef.current.muted = true;
-        }
-    }, []);
-
-    // Mobile scroll handle (Intersection Observer)
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    // Force play on intersecting for mobile devices (ignore hover check for observer)
-                    if (entry.isIntersecting) {
-                        // Ensure video is muted for mobile autoplay policies before playing
-                        if (videoRef.current) {
-                            videoRef.current.muted = true;
-                            // Small delay to ensure mute is registered by browser before play
-                            setTimeout(() => {
-                                videoRef.current?.play().catch(e => console.log('Autoplay prevented by browser:', e));
-                            }, 50);
-                        }
-                    } else {
-                        videoRef.current?.pause();
-                    }
-                });
-            },
-            { threshold: 0.3 } // Play when at least 30% visible (better for fast scrolling)
-        );
-
-        if (containerRef.current) {
-            observer.observe(containerRef.current);
-        }
-
-        return () => observer.disconnect();
-    }, []);
 
     return (
         <motion.div
-            ref={containerRef}
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ delay }}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
-            className="group relative aspect-[9/16] rounded-3xl overflow-hidden border border-white/5 hover:border-orange-500/30 transition-all shadow-2xl shadow-orange-500/0 hover:shadow-orange-500/10 bg-zinc-900 cursor-pointer"
-            onClick={() => {
-                // Toggle play/pause on tap for mobile just in case
-                if (videoRef.current?.paused) {
-                    videoRef.current.play().catch(e => console.log('Play failed:', e));
-                } else {
-                    videoRef.current?.pause();
-                }
-            }}
+            className="group relative aspect-[9/16] rounded-3xl overflow-hidden border border-white/5 hover:border-orange-500/30 transition-all shadow-2xl shadow-orange-500/0 hover:shadow-orange-500/10 bg-zinc-900"
         >
             <video
                 ref={videoRef}
@@ -84,13 +30,11 @@ const VideoCard = ({ videoSrc, delay }: { videoSrc: string, delay: number }) => 
                 loop
                 muted
                 playsInline
-                autoPlay
-                className="w-full h-full object-cover opacity-85 hover:opacity-100 hover:scale-105 md:group-hover:opacity-100 md:group-hover:scale-105 transition-all duration-700 pointer-events-none"
-                style={{ pointerEvents: 'none' }}
+                className="w-full h-full object-cover opacity-85 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
-            <div className="absolute inset-0 flex flex-col justify-end p-8 pointer-events-none" />
+            <div className="absolute inset-0 flex flex-col justify-end p-8" />
         </motion.div>
     );
 };
@@ -100,8 +44,8 @@ const LandingPage = () => {
         <div className="min-h-screen bg-[#000000] text-white pt-32 pb-20 px-6 relative overflow-hidden">
             {/* ROI Media Inspired Radial Glows */}
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden -z-10">
-                <div className="hidden md:block absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-orange-600/10 blur-[120px] rounded-full" />
-                <div className="hidden md:block absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-900/10 blur-[120px] rounded-full" />
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-orange-600/10 blur-[120px] rounded-full" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-900/10 blur-[120px] rounded-full" />
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,107,0,0.03)_0%,transparent_70%)]" />
             </div>
 
@@ -126,42 +70,18 @@ const LandingPage = () => {
                             We build you a mass content distribution system that scales your brand to new heights with an army of clippers.
                         </p>
 
-                        {/* Social Proof Metrics */}
-                        <div className="flex flex-col md:flex-row items-center justify-center gap-12 md:gap-20 mb-16">
+                        {/* Social Proof Metric */}
+                        <div className="flex flex-col items-center justify-center mb-16">
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 transition={{ delay: 0.5 }}
                                 className="flex flex-col items-center"
                             >
-                                <div className="flex flex-col items-center">
-                                    <span className="text-5xl md:text-6xl font-black tabular-nums tracking-tight">750,000,000+</span>
-                                    <span className="text-orange-500/80 font-bold text-[10px] tracking-widest uppercase mt-1">(In the past 5 months)</span>
-                                </div>
-                                <span className="text-zinc-600 font-bold tracking-[0.2em] uppercase text-xs mt-2 text-center">Views generated for one of our clients</span>
-                            </motion.div>
-
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: 0.7 }}
-                                className="flex flex-col items-center"
-                            >
-                                <span className="text-5xl md:text-6xl font-black tabular-nums tracking-tight">900,000+</span>
-                                <span className="text-zinc-600 font-bold tracking-[0.2em] uppercase text-xs mt-2 text-center">Resulting subscriber growth</span>
+                                <span className="text-5xl md:text-6xl font-black tabular-nums tracking-tight">210,000,000+</span>
+                                <span className="text-zinc-600 font-bold tracking-[0.2em] uppercase text-xs mt-2">Views tracked for your favorite creators</span>
                             </motion.div>
                         </div>
-
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.9 }}
-                            className="inline-block px-6 py-3 md:px-8 md:py-4 bg-white/5 border border-white/10 rounded-full backdrop-blur-md"
-                        >
-                            <span className="text-zinc-300 font-bold tracking-[0.15em] uppercase text-xs md:text-sm">
-                                Working with 15+ of the world's largest creators and founders
-                            </span>
-                        </motion.div>
 
                     </motion.div>
 
@@ -170,7 +90,7 @@ const LandingPage = () => {
                         <motion.div
                             animate={{ x: [0, -1000] }}
                             transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                            className="flex gap-20 whitespace-nowrap will-change-transform"
+                            className="flex gap-20 whitespace-nowrap"
                         >
                             {["Streamers", "Coaches", "Creators", "Musicians", "Athletes", "Brands", "Influencers", "Gamers"].map((cat) => (
                                 <span key={cat} className="text-4xl md:text-5xl font-bold text-zinc-800 uppercase tracking-widest hover:text-orange-500/20 transition-colors cursor-default">
@@ -284,15 +204,15 @@ const LandingPage = () => {
                         {[
                             {
                                 label: "Email",
-                                value: "nexus@nexusemails.org",
+                                value: "nexus@thenexusmedia.org",
                                 icon: <Mail className="text-orange-500" />,
-                                href: "mailto:nexus@nexusemails.org"
+                                href: "mailto:nexus@thenexusmedia.org"
                             },
                             {
-                                label: "Team",
-                                value: "+91 7002884915",
+                                label: "Phone",
+                                value: "+91 9834613309",
                                 icon: <Phone className="text-orange-500" />,
-                                href: "tel:+917002884915"
+                                href: "tel:+919834613309"
                             },
                             {
                                 label: "Instagram",

@@ -34,16 +34,17 @@ const ComingSoonPage = ({ title }: ComingSoonPageProps) => {
                         <Construction className="text-orange-500 w-10 h-10" />
                     </motion.div>
 
-                    <h1 className="text-4xl md:text-6xl font-black uppercase tracking-[0.1em] orange-gradient mb-4">
-                        {title} COMING SOON
+                    <h1 className="text-4xl md:text-5xl font-black uppercase tracking-[0.2em] orange-gradient mb-4">
+                        {title}
                     </h1>
 
-                    <div className="inline-block px-6 py-2 mb-8 text-[10px] font-bold tracking-[0.4em] uppercase bg-orange-500/10 text-orange-500 border border-orange-500/20 rounded-full">
+                    <div className="inline-block px-4 py-1 mb-8 text-[10px] font-bold tracking-[0.4em] uppercase bg-black/40 text-orange-500/80 border border-orange-500/10 rounded-full">
                         System Module: Under Construction
                     </div>
 
-                    <p className="text-zinc-400 text-xl font-light leading-relaxed mb-12 max-w-lg mx-auto">
-                        We are fundamentally redefining how modern marketing works. The <span className="text-white font-bold">{title}</span> infrastructure is currently being orchestrated behind the scenes and will be deployed shortly.
+                    <p className="text-zinc-400 text-lg font-light leading-relaxed mb-12">
+                        Our engineers are currently orchestrating the <span className="text-white font-medium">{title}</span> infrastructure.
+                        This node will be integrated into the NEXUS network shortly.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
